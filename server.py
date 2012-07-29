@@ -39,17 +39,9 @@ def playlist():
 		songlist=songlist[1:]
 		namelist=namelist[1:]
 		sendupdatedlist()
-def download(link,tmp):
-	global songlist
-	global namelist
-	global down
-	if(len(re.findall("cache",os.getcwd()))==0):
-		os.chdir("cache_folder")
-	while(down>=5):
-		continue
-	down+=1
+
+def download_youtube(link):
 	os.system("python youtube-dl "+link)
-	down-=1
 	if(len(re.findall("http",link))==0):
 		link="http://"+link
 	nl=re.findall("span id=\"eow-title\".*?title=\"(.*?)\"",urllib.urlopen(link).read())
@@ -62,6 +54,18 @@ def download(link,tmp):
 	link+="&"
 	fname=re.findall("\?v=(.*?)\&",link)[0]
 	songlist.append(fname+".mp4")
+
+def download(link,tmp):
+	global songlist
+	global namelist
+	global down
+	if(len(re.findall("cache",os.getcwd()))==0):
+		os.chdir("cache_folder")
+	while(down>=5):
+		continue
+	down+=1
+	download_youtube(link)
+	down-=1
 	sendupdatedlist()
 def handler(clientsock,addr,s):
 	global iplist
