@@ -5,20 +5,36 @@ from  thread import *
 import sys
 import re
 import os
-
+import urllib
+RETPORT=21454
 songlist=[]
+namelist=[]
 down=0
+iplist=[]
+def sendupdatedlist():
+	global iplist
+	global namelist
+	for i in iplist:
+		s=socket.socket()
+		print "UPDATING "+str(i)
+		s.connect((i[0],RETPORT))
+		s.send(str(namelist))
+		s.close()
+
 def playlist():
 	global songlist
+	global namelist
 	while(1):
 		while(len(songlist)==0):
 			continue
 		print "playing ",songlist[0]
 		os.system("mplayer -vo null "+songlist[0])
 		songlist=songlist[1:]
-
+		namelist=namelist[1:]
+		sendupdatedlist()
 def download(link,tmp):
 	global songlist
+	global namelist
 	global down
 	if(len(re.findall("cache",os.getcwd()))==0):
 		os.chdir("cache_folder")
@@ -27,19 +43,29 @@ def download(link,tmp):
 	down+=1
 	os.system("python youtube-dl "+link)
 	down-=1
+	if(len(re.findall("http",link))==0):
+		link="http://"+link
+	nl=re.findall("span id=\"eow-title\".*?title=\"(.*?)\"",urllib.urlopen(link).read())
+
+	if(len(nl)==0):
+		namelist.append("nameless")
+	else:
+	 	namelist.append(nl[0])
+	print "NAME=====================================+++>" +nl[0]
 	link+="&"
 	fname=re.findall("\?v=(.*?)\&",link)[0]
 	songlist.append(fname+".mp4")
+	sendupdatedlist()
 def handler(clientsock,addr,s):
+	global iplist
+	iplist.append(addr)
 	while 1:
 		data=clientsock.recv(1024)
-		if data=="getplaylist":
-			s.send(str(songlist))
-			break
 		start_new_thread(download,(data,0))
 		if not data:
 			break
 	print "broken"
+	iplist[:]=[x for x in iplist if x!=addr]
 	clientsock.close()
 
 s = socket.socket()         # Create a socket object
