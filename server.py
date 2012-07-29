@@ -14,11 +14,18 @@ iplist=[]
 def sendupdatedlist():
 	global iplist
 	global namelist
+	songstr=""
+	cur=1;
+	for i in namelist:
+		songstr+=str(cur)
+		songstr+=". "
+		songstr+=i
+		songstr+="\n"
 	for i in iplist:
 		s=socket.socket()
 		print "UPDATING "+str(i)
 		s.connect((i[0],RETPORT))
-		s.send(str(namelist))
+		s.send(str(songstr))
 		s.close()
 
 def playlist():
