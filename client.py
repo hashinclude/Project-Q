@@ -8,7 +8,7 @@ def updateplaylist():
 	global host
 	s=socket.socket()
 	s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-	s.bind((host,RETPORT))
+	s.bind(("0.0.0.0",RETPORT))
 	s.listen(5)
 	while True:
 		c,addr=s.accept()

@@ -6,6 +6,7 @@ import sys
 import re
 import os
 import urllib
+import youtubedl
 RETPORT=21454
 songlist=[]
 namelist=[]
@@ -41,7 +42,17 @@ def playlist():
 		sendupdatedlist()
 
 def download_youtube(link):
-	os.system("python youtube-dl "+link)
+	if(len(link)==0):
+		return;
+#	print "DOWNLOADING       " + link
+#	os.system("python youtube-dl "+link)
+	fname=re.findall("\?v=(.*?)\&",link+"&")[0]
+	print os.getcwd()+fname+".mp4"
+	if not os.path.isfile(os.getcwd()+"/"+fname+".mp4") :
+		fd=youtubedl.FileDownloader({"outtmpl":u'%(id)s.%(ext)s'})
+		for e in youtubedl.gen_extractors():
+			fd.add_info_extractor(e)
+		fd.download([link])
 	if(len(re.findall("http",link))==0):
 		link="http://"+link
 	nl=re.findall("span id=\"eow-title\".*?title=\"(.*?)\"",urllib.urlopen(link).read())
@@ -50,9 +61,7 @@ def download_youtube(link):
 		namelist.append("nameless")
 	else:
 	 	namelist.append(nl[0])
-	print "NAME=====================================+++>" +nl[0]
-	link+="&"
-	fname=re.findall("\?v=(.*?)\&",link)[0]
+#	print "NAME=====================================+++>" +nl[0]
 	songlist.append(fname+".mp4")
 
 def download(link,tmp):
@@ -80,8 +89,10 @@ def handler(clientsock,addr,s):
 	clientsock.close()
 
 s = socket.socket()         # Create a socket object
+
 host = str(sys.argv[1])     # Get local machine name
 port = int(sys.argv[2])     # Reserve a port for your service.
+s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
 s.bind((host, port))        # Bind to the port
 s.listen(5)                 # Now wait for client connection.
 
