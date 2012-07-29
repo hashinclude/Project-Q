@@ -19,6 +19,7 @@ def sendupdatedlist():
 	cur=1;
 	for i in namelist:
 		songstr+=str(cur)
+		cur+=1
 		songstr+=". "
 		songstr+=i
 		songstr+="\n"
