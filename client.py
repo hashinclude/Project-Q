@@ -2,6 +2,9 @@ import socket
 import sys
 import thread
 import time
+import os
+import urllib
+import base64
 from Tkinter import *
 
 RETPORT=21454
@@ -61,5 +64,19 @@ thread.start_new_thread(updateplaylist,())
 thread.start_new_thread(updgui,())
 while True:
 	msg=raw_input("Client >> ")
-	s.send(msg)
+	s.send("BEGINCOM")
+	msg=msg.split(' ')[0]
+	if len(msg)>8:
+		if(msg[0]=='\''):
+			msg=msg[1:]
+		if(msg[-1]=='\''):
+			msg=msg[:-1]
+	print msg
+	if not os.path.isfile(msg):
+		s.send(msg)
+	else:
+		inf="FILESENDINGBEGIN:"+os.path.basename(msg)+"BEGIN:"+str(base64.b64encode(open(msg).read()))+"FILESENDINGEND";
+		print len(inf)
+		s.send(inf)
+	s.send("ENDCOM")
 s.close()

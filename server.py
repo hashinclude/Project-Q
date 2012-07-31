@@ -7,11 +7,36 @@ import re
 import os
 import urllib
 import youtubedl
+from shutil import *
+import base64
 RETPORT=21454
 songlist=[]
 namelist=[]
 down=0
 iplist=[]
+def recvbigdata(clientsock):
+	ret=""
+	cstr=""
+	while(True):
+		cstr=clientsock.recv(100)
+#		print cstr
+#		print "\n\n"
+		if(len(cstr)>=8):
+#			print "=============>"
+#			print cstr[:8]
+#			print cstr[:8]=="BEGINCOM"
+			if(cstr[:8]=="BEGINCOM"):
+				ret=cstr[8:]
+				break
+	while True:
+		cstr=clientsock.recv(1024)
+		if(len(cstr)>=6):
+			if(cstr[-6:]=="ENDCOM"):
+				ret+=cstr[:-6]
+				return ret
+		ret+=cstr
+#		print ret
+		
 def sendupdatedlist():
 	global iplist
 	global namelist
@@ -69,19 +94,36 @@ def download(link,tmp):
 	global songlist
 	global namelist
 	global down
+	print len(link)
 	if(len(re.findall("cache",os.getcwd()))==0):
 		os.chdir("cache_folder")
 	while(down>=5):
 		continue
 	down+=1
-	download_youtube(link)
+	if len(re.findall("youtube",link))!=0:
+		download_youtube(link)
+	elif(len(link)>4):
+		if(link[-4:]==".mp3" and len(re.findall("FILESENDINGBEGIN",link))==0):
+			loc=urllib.urlretrieve(link)[0]
+			move(loc,"./")
+			songlist.append(os.path.basename(loc))
+			namelist.append(os.path.basename(loc))
+		else:
+			lst=re.findall("FILESENDINGBEGIN:(.*?)BEGIN:(.*?)FILESENDINGEND",link)
+			if(len(lst)!=0):
+				lst=lst[0]
+				x=open(lst[0],"w")
+				x.write(base64.b64decode(lst[1]))
+				x.close()
+				songlist.append(lst[0])
+				namelist.append(lst[0])
 	down-=1
 	sendupdatedlist()
 def handler(clientsock,addr,s):
 	global iplist
 	iplist.append(addr)
 	while 1:
-		data=clientsock.recv(1024)
+		data=recvbigdata(clientsock)
 		start_new_thread(download,(data,0))
 		if not data:
 			break
