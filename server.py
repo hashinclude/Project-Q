@@ -9,11 +9,14 @@ import urllib
 import youtubedl
 from shutil import *
 import base64
+import threading
 RETPORT=21454
 songlist=[]
 namelist=[]
 down=0
 iplist=[]
+sem=threading.Semaphore(value=1)
+sem.acquire()
 def recvbigdata(clientsock):
 	ret=""
 	cstr=""
@@ -58,16 +61,21 @@ def sendupdatedlist():
 def playlist():
 	global songlist
 	global namelist
+	global sem
 	while(1):
-		while(len(songlist)==0):
-			continue
+		if(len(songlist)!=0):
+			sem.release()
+		sem.acquire()
 		print "playing ",songlist[0]
 		os.system("mplayer -vo null "+songlist[0])
 		songlist=songlist[1:]
 		namelist=namelist[1:]
 		sendupdatedlist()
+		if(len(songlist)==0):
+			sem.acquire()
 
 def download_youtube(link):
+	global sem
 	if(len(link)==0):
 		return;
 #	print "DOWNLOADING       " + link
@@ -89,11 +97,13 @@ def download_youtube(link):
 	 	namelist.append(nl[0])
 #	print "NAME=====================================+++>" +nl[0]
 	songlist.append(fname+".mp4")
+	sem.release()
 
 def download(link,tmp):
 	global songlist
 	global namelist
 	global down
+	global sem
 	print len(link)
 	if(len(re.findall("cache",os.getcwd()))==0):
 		os.chdir("cache_folder")
@@ -108,6 +118,7 @@ def download(link,tmp):
 			move(loc,"./")
 			songlist.append(os.path.basename(loc))
 			namelist.append(os.path.basename(loc))
+			sem.release()
 		else:
 			lst=re.findall("FILESENDINGBEGIN:(.*?)BEGIN:(.*?)FILESENDINGEND",link)
 			if(len(lst)!=0):
@@ -117,6 +128,7 @@ def download(link,tmp):
 				x.close()
 				songlist.append(lst[0])
 				namelist.append(lst[0])
+				sem.release()
 	down-=1
 	sendupdatedlist()
 def handler(clientsock,addr,s):
