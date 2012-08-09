@@ -67,7 +67,7 @@ def playlist():
 			sem.release()
 		sem.acquire()
 		print "playing ",songlist[0]
-		os.system("mplayer -vo null "+songlist[0])
+		os.system("mplayer \""+songlist[0]+"\"")
 		songlist=songlist[1:]
 		namelist=namelist[1:]
 		sendupdatedlist()
@@ -105,38 +105,41 @@ def download(link,tmp):
 	global down
 	global sem
 	print len(link)
-	if(len(re.findall("cache",os.getcwd()))==0):
-		os.chdir("cache_folder")
-	while(down>=5):
-		continue
-	down+=1
-	if len(re.findall("youtube",link))!=0:
-		download_youtube(link)
-	elif(len(link)>4):
-		if(link[-4:]==".mp3" and len(re.findall("FILESENDINGBEGIN",link))==0):
-			loc=urllib.urlretrieve(link)[0]
-			move(loc,"./")
-			songlist.append(os.path.basename(loc))
-			namelist.append(os.path.basename(loc))
-			sem.release()
-		else:
-			lst=re.findall("FILESENDINGBEGIN:(.*?)BEGIN:(.*?)FILESENDINGEND",link)
-			if(len(lst)!=0):
-				lst=lst[0]
-				x=open(lst[0],"w")
-				x.write(base64.b64decode(lst[1]))
-				x.close()
-				songlist.append(lst[0])
-				namelist.append(lst[0])
+	if(link!="INISEND"):
+		if(len(re.findall("cache",os.getcwd()))==0):
+			os.chdir("cache_folder")
+		while(down>=5):
+			continue
+		down+=1
+		if len(re.findall("youtube",link))!=0:
+			download_youtube(link)
+		elif(len(link)>4):
+			if(link[-4:]==".mp3" and len(re.findall("FILESENDINGBEGIN",link))==0):
+				loc=urllib.urlretrieve(link)[0]
+				move(loc,"./")
+				songlist.append(os.path.basename(loc))
+				namelist.append(os.path.basename(loc))
 				sem.release()
-	down-=1
+			else:
+				lst=re.findall("FILESENDINGBEGIN:(.*?)BEGIN:(.*?)FILESENDINGEND",link)
+				if(len(lst)!=0):
+					lst=lst[0]
+					x=open(lst[0],"w")
+					x.write(base64.b64decode(lst[1]))
+					x.write(lst[1])
+					x.close()
+					songlist.append(lst[0])
+					namelist.append(lst[0])
+					sem.release()
+		down-=1
 	sendupdatedlist()
 def handler(clientsock,addr,s):
 	global iplist
 	iplist.append(addr)
+	data="INISEND"
 	while 1:
-		data=recvbigdata(clientsock)
 		start_new_thread(download,(data,0))
+		data=recvbigdata(clientsock)
 		if not data:
 			break
 	print "broken"
