@@ -1,5 +1,5 @@
 #!/usr/bin/python           # This is server.py file
- 
+import time 
 import socket               # Import socket module
 from  thread import *
 import sys
@@ -10,7 +10,7 @@ import youtubedl
 from shutil import *
 import base64
 import threading
-RETPORT=21454
+RETPORT=21455
 songlist=[]
 namelist=[]
 down=0
@@ -52,17 +52,19 @@ def sendupdatedlist():
 		songstr+=i
 		songstr+="\n"
 	for i in iplist:
-		s=socket.socket()
+		s2=socket.socket()
 		print "UPDATING "+str(i)
-		s.connect((i[0],RETPORT))
-		s.send(str(songstr))
-		s.close()
+		s2.connect((i[0],i[1]))
+		s2.send(str(songstr))
+		s2.close()
 
 def playlist():
 	global songlist
 	global namelist
 	global sem
 	while(1):
+		if(len(songlist)==0):
+			sem.acquire()
 		if(len(songlist)!=0):
 			sem.release()
 		sem.acquire()
@@ -132,14 +134,19 @@ def download(link,tmp):
 					namelist.append(lst[0])
 					sem.release()
 		down-=1
+	else:
+	    time.sleep(1);
 	sendupdatedlist()
 def handler(clientsock,addr,s):
 	global iplist
-	iplist.append(addr)
+	data=recvbigdata(clientsock)
+	iplist.append((addr[0],int(data)))
 	data="INISEND"
+	start_new_thread(download,(data,0))
+	
 	while 1:
-		start_new_thread(download,(data,0))
 		data=recvbigdata(clientsock)
+		start_new_thread(download,(data,0))
 		if not data:
 			break
 	print "broken"
