@@ -31,7 +31,6 @@ class FormPage(Resource):
     def render_GET(self, request):
 	    print request
 	    request.setResponseCode(200)
-
     def render_POST(self, request):
 	  print request
 	  self.headers=request.getAllHeaders()
@@ -52,6 +51,7 @@ class FormPage(Resource):
 
 root = Resource()
 root.putChild("uploadsong", FormPage())
+root.putChild("updplay", FormPage())
 factory = Site(root)
 reactor.listenTCP(8880, factory)
 start_new_thread(playlist,())

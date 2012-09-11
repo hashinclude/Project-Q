@@ -167,9 +167,9 @@ def uploadsongs():
 			listempty.release()
 		listempty.acquire()
 		msg=sfname[0]
-		proxy_handler = urllib2.ProxyHandler({})
-		opener = urllib2.build_opener(proxy_handler)
-		urllib2.install_opener(opener)
+#		proxy_handler = urllib2.ProxyHandler({})
+#		opener = urllib2.build_opener(proxy_handler)
+#		urllib2.install_opener(opener)
 		
 		form=MultiPartForm()
 		form.add_file('upfile',msg,fileHandle=StringIO(open(msg).read()))
@@ -200,6 +200,7 @@ def chkexisting(fname):
 	return (os.path.isfile(fname))
 def download_youtube(link):
 	global sem
+	
 	if(len(link)==0):
 		return;
 	fname=re.findall("\?v=(.*?)\&",link+"&")[0]
@@ -249,13 +250,15 @@ class FormPage(Resource):
 		if(request.args.get('link')!=None):
 			print request.args['link']
 			start_new_thread(download,(request.args['link'][0],0))
+		return "<html>Added "+str(request.args.get('link'))+"</html>"
 
 
 def updateplaylist():
 	global host
 	global sock
 
-
+os.system("export no_proxy=\"localhost, 127.0.0.1, iiit.ac.in, .iiit.ac.in, iiit.net, .iiit.net, 172.16.0.0/12, 192.168.0.0/16, 10.0.0.0/8\"")
+os.system("export http_proxy=\"http://proxy.iiit.ac.in\"")
 root=Resource()
 root.putChild("download",FormPage())
 SERVER=sys.argv[1]
