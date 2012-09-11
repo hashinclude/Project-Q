@@ -37,15 +37,17 @@ class FormPage(Resource):
 	  self.headers=request.getAllHeaders()
 	  img=cgi.FieldStorage(fp=request.content, headers=self.headers, \
 			              environ={'REQUEST_METHOD':'POST', 'CONTENT_TYPE':self.headers['content-type'], })
+	  fname=os.path.basename(img['upfile'].filename)
+	  fname=os.path.join("cache_folder",fname)
 
-	  if(os.path.isfile(img['upfile'].filename)==True):
+	  if(os.path.isfile(fname)==True):
 		  print "ALREADY EXISTS"
 	  else:
-		  fp=open(img['upfile'].filename,"wb")
+		  fp=open(fname,"wb")
 		  fp.write(img['upfile'].value)
 		  fp.close()
-          songlist.append(img['upfile'].filename)
-	  namelist.append(img['upfile'].filename)
+          songlist.append(fname)
+	  namelist.append(fname)
 	  sem.release()
 
 root = Resource()
