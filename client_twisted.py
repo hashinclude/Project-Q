@@ -172,7 +172,7 @@ def uploadsongs():
 		urllib2.install_opener(opener)
 		
 		form=MultiPartForm()
-		form.add_file('upfile',msg,fileHandle=StringIO("abcd1234"))
+		form.add_file('upfile',msg,fileHandle=StringIO(open(msg).read()))
 		request=urllib2.Request('http://'+SERVER)
 		print "http://" + SERVER
 		body = str(form)
