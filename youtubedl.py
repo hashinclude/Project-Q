@@ -809,7 +809,7 @@ class FileDownloader(object):
 				self.trouble(u'ERROR: Cannot write description file ' + descfn)
 				return
 
-		if self.params.get('writeinfojson', False):
+		if self.params.get('writeinfojson', False) or True:
 			infofn = filename + u'.info.json'
 			self.report_writeinfojson(infofn)
 			try:
@@ -1340,7 +1340,6 @@ class YoutubeIE(InfoExtractor):
 		# Start extracting information
 		self.report_information_extraction(video_id)
 
-		# uploader
 		if 'author' not in video_info:
 			self._downloader.trouble(u'ERROR: unable to extract uploader nickname')
 			return
@@ -1449,7 +1448,7 @@ class YoutubeIE(InfoExtractor):
 
 			try:
 				# Process video information
-				self._downloader.process_info({
+				vidinf={
 					'id':		video_id.decode('utf-8'),
 					'url':		video_real_url.decode('utf-8'),
 					'uploader':	video_uploader.decode('utf-8'),
@@ -1461,7 +1460,8 @@ class YoutubeIE(InfoExtractor):
 					'thumbnail':	video_thumbnail.decode('utf-8'),
 					'description':	video_description,
 					'player_url':	player_url,
-				})
+				}
+				self._downloader.process_info(vidinf)
 			except UnavailableVideoError, err:
 				self._downloader.trouble(u'\nERROR: unable to download video')
 
@@ -4391,7 +4391,7 @@ def parseOpts():
 			help='write video description to a .description file', default=False)
 	filesystem.add_option('--write-info-json',
 			action='store_true', dest='writeinfojson',
-			help='write video metadata to a .info.json file', default=False)
+			help='write video metadata to a .info.json file', default=True)
 
 
 	postproc.add_option('--extract-audio', action='store_true', dest='extractaudio', default=False,
